@@ -17,6 +17,23 @@ type ProductForm = {
   image_url: string;
 };
 
+type SupabaseTable = {
+  select: (columns?: string) => {
+    order: (column: string, options?: { ascending?: boolean }) => Promise<{ data: unknown; error: { message: string } | null }>;
+  };
+  insert: (values: unknown) => Promise<{ error: { message: string } | null }>;
+  update: (values: unknown) => {
+    eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+  };
+  delete: () => {
+    eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+  };
+};
+
+type SupabaseLooseClient = NonNullable<ReturnType<typeof createClient>> & {
+  from: (table: string) => SupabaseTable;
+};
+
 const blankProduct: ProductForm = {
   name: "",
   description: "",
@@ -39,7 +56,7 @@ export function AdminDashboard({
   const [productForm, setProductForm] = useState<ProductForm>(blankProduct);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(() => createClient() as SupabaseLooseClient | null, []);
 
   const loadData = useCallback(async () => {
     if (!supabase) return;
